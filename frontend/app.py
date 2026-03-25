@@ -100,8 +100,8 @@ if submit:
         }
 
         with st.spinner("🔄 Analyzing patient data..."):
-            response = requests.post("https://heart-backend.onrender.com/predict", json=data)
-
+            response = requests.post("http://localhost:8000/predict", json=data)
+            
         if response.status_code == 200:
             result = response.json()
 
