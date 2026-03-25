@@ -1,5 +1,12 @@
 import streamlit as st
-import requests
+
+# 🔥 ADD THESE IMPORTS (IMPORTANT)
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from backend.predict import make_prediction
+
 
 # -------- PAGE CONFIG -------- #
 st.set_page_config(page_title="Heart Disease Predictor", layout="centered")
@@ -100,35 +107,36 @@ if submit:
         }
 
         with st.spinner("🔄 Analyzing patient data..."):
-            response = requests.post("http://localhost:8000/predict", json=data)
-            
-        if response.status_code == 200:
-            result = response.json()
+            # 🔥 DIRECT FUNCTION CALL (NO API)
+            pred, prob = make_prediction(data)
 
-            st.divider()
-            st.subheader("🧾 Prediction Result")
+            result = {
+                "prediction": pred,
+                "probability": round(prob * 100, 2),
+                "message": "Heart Disease Detected" if pred == 1 else "No Heart Disease"
+            }
 
-            st.success(result["message"])
-            st.info(f"Confidence: {result['probability']}%")
+        st.divider()
+        st.subheader("🧾 Prediction Result")
 
-            # Risk Level
-            prob = result["probability"]
+        st.success(result["message"])
+        st.info(f"Confidence: {result['probability']}%")
 
-            if prob < 30:
-                st.success("🟢 Low Risk")
-            elif prob < 70:
-                st.warning("🟡 Medium Risk")
-            else:
-                st.error("🔴 High Risk")
+        # Risk Level
+        prob = result["probability"]
 
-            # Progress bar
-            st.progress(int(prob))
-
-            # Advice
-            if result["prediction"] == 1:
-                st.warning("⚠️ Consult a doctor. Maintain healthy lifestyle.")
-            else:
-                st.success("✅ You are in a healthy range. Keep it up!")
-
+        if prob < 30:
+            st.success("🟢 Low Risk")
+        elif prob < 70:
+            st.warning("🟡 Medium Risk")
         else:
-            st.error(f"Backend Error: {response.text}")
+            st.error("🔴 High Risk")
+
+        # Progress bar
+        st.progress(int(prob))
+
+        # Advice
+        if result["prediction"] == 1:
+            st.warning("⚠️ Consult a doctor. Maintain healthy lifestyle.")
+        else:
+            st.success("✅ You are in a healthy range. Keep it up!")
